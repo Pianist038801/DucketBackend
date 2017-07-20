@@ -1,0 +1,16 @@
+extends ../layout
+
+block content
+    h1.
+         #{title}
+    ul
+        - each user, i in users
+            li
+                = user.username
+                 p 
+                = user.email
+                 p 
+                = user.password
+                 p 
+               
+                
