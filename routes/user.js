@@ -53,9 +53,57 @@ router.route('/')
               }     
         });
     }); 
-
 router.route('/signup')
     .post(function(req, res) {
+        database.ref('/users/').push(req.body);
+        res.json({success: true});
+    });
+router.route('/forgotpassword')
+    .post(function(req,res){
+        database.ref('/users/').once("value", function(snap) {
+            let isExist = false; 
+                snap.forEach(function(user){
+                    if(user.val().email == req.body.email)
+                        {
+                            isExist = true;
+                            var nodemailer = require('nodemailer');
+                            var transporter = nodemailer.createTransport({
+                                service: 'Gmail',
+                                auth: {
+                                    user: config.mailCredential.mail, // Your email id
+                                    pass: config.mailCredential.password // Your password
+                                }
+                            }); 
+                            var text = 'username : ' + user.val().username + '\n' + 'password : ' + user.val().password;
+
+                            var mailOptions = {
+                                from: 'davidlopez038801@gmail.com',  
+                                to: req.body.email,  
+                                subject: 'Ducket Forgot Password',  
+                                text: text 
+                            };
+
+                            transporter.sendMail(mailOptions, function(error, info){
+                                if(error){
+                                    console.log(error);
+                                    return res.json({success : false});
+                                }else{
+                                    console.log('Message sent: ' + info.response);
+                                    return res.json({success: true});
+                                };       
+                            }); 
+                        }
+                });
+            
+            if(isExist == false)
+                {
+                    res.json({success: false, message: 'No user has that Email'})
+                }
+        });
+    });
+router.route('/signup/check')
+    .post(function(req, res) {
+        console.log(req.body);
         database.ref('/users/').once("value", function(snap) {
             let isExist = false;
             snap.forEach(function(user){
@@ -71,8 +119,7 @@ router.route('/signup')
                     }
             });
 
-            if( isExist == false ){ 
-                database.ref('/users/').push(req.body);
+            if( isExist == false ){    
                 return res.json({success: true});
             }
         });
@@ -186,23 +233,15 @@ function userVerification(idName,email, phone, done){
 
 router.route('/login')
     .post(function(req, res, next){
-        let isDone = false; 
-        console.log(req.body.username);
-        console.log(req.body.password);
+        let isDone = false;  
         database.ref('/users/').once("value", function(snap) {
-            snap.forEach(function(usr){  
-                console.log(usr.val().username);
-                console.log(usr.val().password);
-                
+            snap.forEach(function(usr){   
                 if(usr.val().username == req.body.username && usr.val().password == req.body.password)
-                    {
-                        
+                    { 
                         isDone = true;
                         return res.json({success: true, data: usr});
                     }
-                
-            })
-                console.log(isDone);
+            }) 
             if(isDone == false) return res.json({success: false});
         });
 
@@ -411,12 +450,12 @@ router.route('/sendSMS')
             }
         });
         var randomFour = randomFourDigit();
-        var text = 'email verify code : ' + randomFour;
+        var text = 'email verification code : ' + randomFour;
 
         var mailOptions = {
-            from: 'james90727@gmail.com', // sender address
+            from: 'davidlopez038801@gmail.com', // sender address
             to: email, // list of receivers
-            subject: 'MarvelApp Email verification', // Subject line
+            subject: 'Ducket Email verification', // Subject line
             text: text //, // plaintext body
             // html: '<b>Hello world ✔</b>' // You can choose to send an HTML body instead
         };
@@ -427,7 +466,7 @@ router.route('/sendSMS')
                 return res.json({success : false});
             }else{
                 console.log('Message sent: ' + info.response);
-                return res.json({success: true, content : randomFour});
+                return res.json({success: true, data : randomFour});
             };
         });
     });
