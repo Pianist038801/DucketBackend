@@ -1,5 +1,5 @@
 {
-  "name": "Marvel",
+  "name": "DucketBackend",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -14,6 +14,7 @@
     "debug": "~2.6.3",
     "express": "^4.15.3",
     "express-session": "^1.15.3",
+    "firebase-admin": "^5.0.1",
     "jade": "^1.11.0",
     "jsonwebtoken": "^7.4.1",
     "method-override": "^2.3.9",

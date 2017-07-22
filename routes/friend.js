@@ -209,6 +209,7 @@ function removeItemFromString(stringArray, item){
     }
     return friendList;
 }
+
 router.route('/acceptrequest')
     .post(function(req, res){
         var from = req.body.from;
@@ -247,7 +248,6 @@ router.route('/acceptrequest')
                             }
                             else{
                                 var newRequire = removeItemFromString(user1.requiredfriendlist, from);
-                                
                                 var doc = {
                                     _id : user1._id,
                                     username: user1.username,
@@ -357,4 +357,5 @@ function sendPushNotification(des_token, msg){
         Badges : 'Increment by 1',
     }, deviceIDs);
 }
+
 module.exports = router;

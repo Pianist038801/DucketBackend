@@ -1,7 +1,9 @@
-var mongo = require('mongoose');
-var config = require('../config/appconfig');
+var admin = require("firebase-admin");
 
-mongo.connect(config.dbURL);
+var serviceAccount = require("../config/firebaseServiceKey.json");
 
-var db = mongo.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://ducketapp.firebaseio.com"
+});
+database = admin.database();  

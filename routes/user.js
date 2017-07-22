@@ -52,29 +52,28 @@ router.route('/')
                 });
               }     
         });
-    });
+    }); 
 
 router.route('/signup')
     .post(function(req, res) {
-        var nick = userInfo.create({
-            _id: new ObjectID(),
-            username: req.body.idname, 
-            password: req.body.password,
-            email: req.body.email,
-            phone : req.body.phone,
-            friends : '',
-            requestfriendlist : '',
-            isLoggedIn : false,
-            deviceToken : '',
-            osType : '',
-        },function(error, user){
-            if(error){
-                //throw error;
-                return res.json({ success: false ,message : 'exception occured'});
-            } 
-            else{
-                console.log('User saved successfully');
-                return res.json({ success: true });
+        database.ref('/users/').once("value", function(snap) {
+            let isExist = false;
+            snap.forEach(function(user){
+                if(user.val().username == req.body.username)
+                    {
+                        isExist = true;
+                        return res.json({success: false, message: 'Username Already Exists'})
+                    }
+                if(user.val().email == req.body.email)
+                    {
+                        isExist = true;
+                        return res.json({success: false, message: 'Email Already Exists'})
+                    }
+            });
+
+            if( isExist == false ){ 
+                database.ref('/users/').push(req.body);
+                return res.json({success: true});
             }
         });
     });
@@ -147,6 +146,7 @@ function emailPhoneVerification(email, phone ,done){
     }
 }
 function userNameVerification(userName, done){
+    
     var userDB = new userInfo({username : userName});
     
     userDB.FindByUserName(function(err, users){
@@ -186,6 +186,27 @@ function userVerification(idName,email, phone, done){
 
 router.route('/login')
     .post(function(req, res, next){
+        let isDone = false; 
+        console.log(req.body.username);
+        console.log(req.body.password);
+        database.ref('/users/').once("value", function(snap) {
+            snap.forEach(function(usr){  
+                console.log(usr.val().username);
+                console.log(usr.val().password);
+                
+                if(usr.val().username == req.body.username && usr.val().password == req.body.password)
+                    {
+                        
+                        isDone = true;
+                        return res.json({success: true, data: usr});
+                    }
+                
+            })
+                console.log(isDone);
+            if(isDone == false) return res.json({success: false});
+        });
+
+         
         var resultOfVerification;
         userNameVerification(req.body.idname,  function(result){
             resultOfVerification = result;
@@ -421,8 +442,8 @@ router.route('/sendSMSToPhone')
         var authToken = config.authtoken; 
         console.log(accountSid);
         console.log(authToken);
-        //require the Twilio module and create a REST client 
-        var client = require('twilio')(accountSid, authToken); 
+        //require the Twilio module and create a REST client
+        var client = require('twilio')(accountSid, authToken);
         var randomFour = randomFourDigit();
         client.messages
             .create({
@@ -431,7 +452,7 @@ router.route('/sendSMSToPhone')
                 body: "Marvel App : Phone Verification Code : " + randomFour,
             }).then((message) => {
                 console.log(message.sid);
-                if(message.sid != undefined || message.sid != '')
+               if(message.sid != undefined || message.sid != '')
                     return res.json({success : true, content : randomFour});
                 else
                     return res.json({success : false});
